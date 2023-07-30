@@ -17,6 +17,8 @@ class URLS(Enum):
 
 	OPERATIONS_STATUS_API = "https://apis.roblox.com/assets/v1/operations/{}"
 	ROBLOX_ASSETS_API = "https://apis.roblox.com/assets/v1/assets"
+	MESSAGING_SERVICE_API = "https://apis.roblox.com/messaging-service/v1/universes/{}/topics/{}"
+	UNIVERSE_VERSIONS_API = "https://apis.roblox.com/universes/v1/{}/places/{}/versions"
 
 class AssetTypes(Enum):
 	Model = "Model"
@@ -80,6 +82,7 @@ class Requests:
 class OpenCloudAPI:
 
 	class Internal:
+
 		@staticmethod
 		def build_asset_upload_request( account : API_Key, asset : Asset ) -> dict:
 			return {
@@ -164,3 +167,25 @@ class OpenCloudAPI:
 			return response.json().get("path")[11:]
 		except Exception as exception:
 			return exception
+
+	@staticmethod
+	def messaging_service_send_message(account : API_Key, universeId : int, topic : str, message : str) -> dict:
+		return Requests.post(
+			account,
+			URLS.MESSAGING_SERVICE_API.format(universeId, topic),
+			json = {'message' : message}
+		).json()
+
+	@staticmethod
+	def publish_game_file_to_universe( account : API_Key, universeId : int, placeId : int, filepath : str, versionType="Published" ) -> dict:
+		if not os_path.exists(filepath):
+			raise FileNotFoundError(f'File {filepath} does not exist.')
+		CONTENT_TYPE = filepath.find('rbxlx') != -1 and 'application/xml' or 'application/octet-stream'
+		with open(filepath, 'rb') as file:
+			data = file.read()
+		return requests_post(
+			URLS.UNIVERSE_VERSIONS_API.format(universeId, placeId),
+			params={'versionType' : versionType},
+			data=data,
+			headers={'x-api-key' : account.API_KEY, 'Content-Type' : CONTENT_TYPE}
+		).json()
