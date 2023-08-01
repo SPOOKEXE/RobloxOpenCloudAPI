@@ -6,7 +6,8 @@ def ListUniverseDataStores(api_key, universeId):
 	while True:
 		response = requests.get(
 			STANDARD_DATASTORE_URL.format(universeId),
-			headers = {'x-api-key' : api_key} ).json()
+			headers = {'x-api-key' : api_key}
+		).json()
 		datastores.extend( response.get('datastores') )
 		cursor = response.get('nextPageCursor')
 		if cursor == "":
